@@ -7,17 +7,17 @@ import time
 from tqdm import tqdm
 
 # Menerima input URL dari pengguna
-url = input("Masukkan URL halaman yang akan di-scrape: ")
+url = input("Enter URL : ")
 
 # Menerima input nama file log dari pengguna
-log_filename = input("Masukkan nama file log (contoh: scraping_log.txt): ")
+log_filename = input("file log name (ex: scraping_log.txt): ")
 
 # Inisialisasi WebDriver (misalnya, ChromeDriver) dalam mode "headless" (tanpa buka browser)
 options = webdriver.ChromeOptions()
 options.add_argument("--headless")
 driver = webdriver.Chrome(options=options)
 
-# Pengaturan driver tanpa option headless (non aktifkan jija tidak dibuthkan)
+# Pengaturan driver tanpa option headless (non aktifkan jika tidak dibuthkan)
 # driver = webdriver.Chrome()
 
 # Buka URL
