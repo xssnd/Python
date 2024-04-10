@@ -1,32 +1,32 @@
 word = 'this is single quoted'
 text = "this is double quoted"
 
-print(word)
-print(text)
+print("Output line 1:", word)
+print("Output line 2:",text)
 
 char = "abc" "def"
-print(char)
+print("Output line 7:", char)
 
 other = "abcdef"
-print(other)
+print("Output line 10:",other)
 
 long_string = "one" "two" "three"
-print(long_string)
+print("Output line 13:", long_string)
 
 short_rows = "one"\
         "two"\
         "three"
-print(short_rows)
+print("Output line 16:", short_rows)
 
 long_string = "first row second row third row"
-print(long_string)
+print("Output line 21:",long_string)
 
 shorter = "first row"\
         "second row"\
         "third row"
-print(shorter)
+print("Output line 24:",shorter)
 
 text = """ first row
 second row
 third row"""
-print(text)
+print("Output line 29: ", text)
