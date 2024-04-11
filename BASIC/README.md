@@ -5,7 +5,8 @@ Python programming offers a versatile and intuitive platform for developers to c
 ## Table of Content
 
 Here's a simplified list of python code that you can learn at your own pace:
-000_Number
-001_boolean
-002_Looops
-003_String
+000_Number <br/>
+001_boolean <br/>
+002_Looops <br/>
+003_String <br/>
+004_Loop <br/>
