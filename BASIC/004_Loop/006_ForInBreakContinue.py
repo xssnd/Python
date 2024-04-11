@@ -1,4 +1,4 @@
-animal = ["cat", "dog", "cow", "goat", "chicken"]
+animal = ["cat", "dog", "cow", "goat", "chicken", "ant","pamda","bear"]
 for i in animal:
     if i == "cow":
         continue
