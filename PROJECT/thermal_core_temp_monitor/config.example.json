@@ -6,17 +6,7 @@
   "cooldown_seconds": 300,
   "log_file": "thermal_monitor.log",
   "alerts": {
-    "telegram": {
-      "enabled": false,
-      "bot_token": "",
-      "chat_id": ""
-    },
-    "discord": {
-      "enabled": false,
-      "webhook_url": ""
-    },
-    "email": {
-      "enabled": false
-    }
+    "telegram": {"enabled": false, "bot_token": "", "chat_id": ""},
+    "discord": {"enabled": false, "webhook_url": ""}
   }
 }
