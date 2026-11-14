@@ -1,0 +1,32 @@
+{
+  "monitor": {
+    "interval_seconds": 10,
+    "cpu_threshold": 85,
+    "memory_threshold": 85,
+    "cooldown_seconds": 300,
+    "consecutive_breaches": 2,
+    "recovery_notifications": true,
+    "log_file": "cpu_memory_alert.log"
+  },
+  "notifications": {
+    "telegram": {
+      "enabled": false,
+      "bot_token": "",
+      "chat_id": ""
+    },
+    "discord": {
+      "enabled": false,
+      "webhook_url": ""
+    },
+    "email": {
+      "enabled": false,
+      "smtp_host": "smtp.gmail.com",
+      "smtp_port": 587,
+      "use_tls": true,
+      "username": "",
+      "password": "",
+      "sender": "",
+      "recipients": []
+    }
+  }
+}
