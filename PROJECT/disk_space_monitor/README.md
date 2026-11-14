@@ -17,7 +17,7 @@ Mini software Python untuk memantau kapasitas **setiap partisi/filesystem yang t
 
 ## Persyaratan
 
-- Python 3.9+
+- Python 3.10+
 - Dependensi: `psutil`
 
 ## Instalasi
