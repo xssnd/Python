@@ -1,0 +1,28 @@
+{
+  "warning_percent": 10,
+  "critical_percent": 5,
+  "interval_seconds": 300,
+  "cooldown_seconds": 3600,
+  "recovery_alerts": true,
+  "include_removable": true,
+  "ignored_mounts": ["/snap", "/run"],
+  "log_file": "logs/disk_space_monitor.log",
+  "notifications": {
+    "telegram": {
+      "bot_token": "",
+      "chat_id": ""
+    },
+    "discord": {
+      "webhook_url": ""
+    },
+    "email": {
+      "smtp_host": "",
+      "smtp_port": 587,
+      "username": "",
+      "password": "",
+      "sender": "",
+      "recipient": "",
+      "starttls": true
+    }
+  }
+}
