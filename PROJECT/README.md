@@ -23,3 +23,11 @@ A cross-platform Python utility that monitors mounted partitions and alerts when
 - [Project documentation and installation](disk_space_monitor/README.md)
 - [Example configuration](disk_space_monitor/config.example.json)
 - [Main monitor](disk_space_monitor/monitor.py)
+
+## Process Watcher
+
+A configurable Python process supervisor that detects stopped critical processes and runs user-defined restart commands with retry limits, cooldowns, and notifications.
+
+- [Project documentation and installation](process_watcher/README.md)
+- [Example configuration](process_watcher/config.example.json)
+- [Main watcher](process_watcher/monitor.py)
