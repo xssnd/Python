@@ -1,0 +1,14 @@
+{
+  "interval_seconds": 60,
+  "timeout_seconds": 5,
+  "csv_file": "data/uptime.csv",
+  "include_local_host": true,
+  "cooldown_seconds": 3600,
+  "recovery_alerts": true,
+  "targets": [
+    {"name": "Production Web", "type": "http", "url": "https://example.com", "expected_status": 200},
+    {"name": "Production MySQL", "type": "tcp", "host": "127.0.0.1", "port": 3306},
+    {"name": "SSH Server", "type": "tcp", "host": "192.0.2.10", "port": 22}
+  ],
+  "notifications": {"telegram": {}, "discord": {}, "email": {}}
+}
