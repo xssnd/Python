@@ -31,3 +31,11 @@ A configurable Python process supervisor that detects stopped critical processes
 - [Project documentation and installation](process_watcher/README.md)
 - [Example configuration](process_watcher/config.example.json)
 - [Main watcher](process_watcher/monitor.py)
+
+## Uptime Logger
+
+A Python utility that records local host uptime and remote HTTP/TCP availability to CSV, calculates sample-based availability, and sends outage/recovery notifications.
+
+- [Project documentation and installation](uptime_logger/README.md)
+- [Example configuration](uptime_logger/config.example.json)
+- [Main monitor](uptime_logger/monitor.py)
