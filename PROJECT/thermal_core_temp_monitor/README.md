@@ -1,29 +1,49 @@
 # Thermal & Core Temp Monitor
 
-A lightweight Python utility that reports CPU temperature sensors and watches for signs of thermal throttling.
+A Linux-first CPU temperature monitor that reads **`sensors` from lm-sensors**, supplements readings from sysfs hwmon/psutil, displays a live terminal dashboard, and warns about overheating.
 
 ## Features
 
-- Reads Linux `hwmon` sensor channels and labels (often per-core or per-package, depending on motherboard/CPU driver).
-- Uses `psutil.sensors_temperatures()` as an additional/fallback sensor source.
-- Reads Linux kernel thermal-throttle counters when exposed by the CPU driver (`core_throttle_count` and `package_throttle_count`).
-- Configurable warning/critical temperature thresholds, consecutive critical samples, alert cooldown, and log file.
-- Optional Telegram and Discord notifications.
-- One-shot mode for scripts and scheduled checks; graceful Ctrl+C/SIGTERM shutdown.
-
-## Important hardware/OS notes
-
-Temperature and throttling telemetry is hardware- and driver-dependent. This tool does **not** claim every reported channel is an individual CPU core: labels are passed through from the kernel/driver. Many systems expose only package temperature, and Windows/macOS commonly do not expose the Linux sysfs counters. On those systems the script reports available sensors and explicitly marks throttle counters unavailable.
-
-An increasing Linux thermal-throttle counter is direct evidence that the kernel/CPU driver recorded a throttle event. A high temperature alone is only a risk indicator, not proof of throttling. Some Intel/AMD platforms do not expose these counters through sysfs; absence is not proof that throttling never occurred.
-
-On Linux, sensor visibility may require suitable kernel drivers and permissions. Install/configure `lm-sensors` where appropriate (for example, `sudo sensors-detect`), then verify with `sensors` and `/sys/class/hwmon`.
+- Live, color-aware terminal dashboard with sensor bars and NORMAL / WARNING / CRITICAL states.
+- Reads `sensors` output and supplements it with Linux `/sys/class/hwmon` and optional psutil readings.
+- Reports package/core labels exactly as exposed by the hardware and driver; it never invents per-core data.
+- Configurable warning/critical thresholds, sample interval, consecutive critical samples, and alert cooldown.
+- Telegram and Discord alerts; credentials can be supplied through environment variables.
+- JSON output for scripts/monitoring pipelines.
+- One-shot mode, CLI threshold overrides, custom sensors executable, log file, graceful Ctrl+C/SIGTERM.
+- Reports Linux thermal-throttle counters when exposed by the CPU driver.
 
 ## Requirements
 
 - Python 3.10+
-- Linux recommended for per-channel hwmon and kernel throttle counters
-- `psutil` (optional at runtime for additional temperature backends)
+- Linux recommended
+- `lm-sensors` (recommended; command: `sensors`)
+- Optional Python dependency: `psutil`
+
+### Install lm-sensors
+
+Debian / Ubuntu:
+```bash
+sudo apt update && sudo apt install -y lm-sensors
+sudo sensors-detect
+sensors
+```
+
+RHEL / Rocky / AlmaLinux:
+```bash
+sudo dnf install -y lm_sensors
+sudo sensors-detect
+sensors
+```
+
+Arch Linux:
+```bash
+sudo pacman -S lm_sensors
+sudo sensors-detect
+sensors
+```
+
+Sensor availability depends on the motherboard, CPU, kernel driver, and permissions. Virtual machines may not expose host sensors.
 
 ## Installation
 
@@ -35,48 +55,59 @@ pip install -r requirements.txt
 cp config.example.json config.json
 ```
 
-Windows PowerShell activation: `.venv\\Scripts\\Activate.ps1`. Sensor availability on Windows depends on platform support exposed to psutil; Linux-specific throttle counters are unavailable there.
+## CLI
+
+```bash
+python monitor.py                         # live dashboard
+python monitor.py --once                  # one sample
+python monitor.py --interval 2            # sample every 2 seconds
+python monitor.py --warning 75 --critical 88
+python monitor.py --json --once           # machine-readable output
+python monitor.py --no-color
+python monitor.py --sensors-command /usr/bin/sensors
+python monitor.py --config /etc/temperature-monitor.json
+python monitor.py --help
+```
+
+Exit status: `0` when a one-shot sample contains readings, `1` when no sensor data is available, and `2` for invalid configuration/CLI values.
 
 ## Configuration
 
 Edit `config.json`:
 
-| Setting | Default | Description |
+| Key | Default | Meaning |
 |---|---:|---|
-| `interval_seconds` | 5 | Sampling interval |
-| `warning_celsius` | 80 | Warning temperature |
-| `critical_celsius` | 90 | Critical temperature |
-| `consecutive_samples` | 2 | Consecutive critical samples before temperature alert |
-| `cooldown_seconds` | 300 | Minimum time between alerts |
-| `log_file` | thermal_monitor.log | Log destination |
+| `interval_seconds` | 5 | Sampling interval (1–3600 seconds) |
+| `warning_celsius` | 80 | Warning threshold |
+| `critical_celsius` | 90 | Critical threshold; must exceed warning |
+| `consecutive_samples` | 2 | Critical samples required before alert |
+| `cooldown_seconds` | 300 | Minimum seconds between alerts |
+| `log_file` | temperature_monitor.log | Log file (relative to project directory unless absolute) |
 
-Set `alerts.telegram.enabled` or `alerts.discord.enabled` to true to enable notifications. Prefer environment variables for secrets:
-
+Set notification providers under `alerts`. Prefer environment variables for secrets:
 ```bash
 export TELEGRAM_BOT_TOKEN="..."
 export TELEGRAM_CHAT_ID="..."
 export DISCORD_WEBHOOK_URL="https://discord.com/api/webhooks/..."
 ```
 
-Do not commit `config.json`, tokens, or webhook URLs.
+Never commit `config.json`, tokens, or webhook URLs.
 
-## Usage
+## Interpreting readings and alerts
 
-```bash
-python monitor.py
-python monitor.py --once
-python monitor.py --config /path/to/config.json
-```
-
-The report prints every detected sensor, its source, temperature, and available throttle counters. An alert is raised when a critical temperature persists for the configured number of samples, or when a throttle counter increases. Warning temperature is included in the alert message; it is not by itself treated as confirmed throttling.
+- WARNING is raised when the hottest sensor reaches the warning threshold.
+- A remote overheating alert is sent after the critical threshold is reached for the configured consecutive sample count.
+- An increase in an exposed kernel thermal-throttle counter triggers an alert immediately (subject to cooldown).
+- A high temperature is a risk indicator, not proof of throttling. Counter availability varies by CPU vendor, kernel, and driver.
+- Temperature limits differ by CPU model. Choose thresholds using the manufacturer's specifications; the defaults are examples, not universal safety limits.
 
 ## Troubleshooting
 
-- **No temperatures:** check `sensors`, `/sys/class/hwmon`, kernel drivers, and permissions. Virtual machines may not expose host sensors.
-- **Only package temperature appears:** this is a hardware/driver limitation; the program cannot manufacture per-core readings.
-- **No throttle counters:** check whether `/sys/devices/system/cpu/cpu*/thermal_throttle/` exists. Counter availability varies by CPU vendor, kernel, and driver.
-- **False alerts:** adjust thresholds for the CPU model and workload; vendor thermal limits differ.
+- **`sensors` not found:** install `lm-sensors`, activate your virtual environment if needed, and ensure the executable is on PATH.
+- **No readings:** run `sensors` manually, check `/sys/class/hwmon`, kernel modules, and permissions.
+- **Only package temperature:** some platforms do not expose individual core sensors.
+- **No throttle counters:** this is normal on drivers that do not publish the Linux sysfs counters.
 
 ## Safety
 
-This is a monitoring tool, not a cooling controller. It does not change fan speeds, clock frequencies, voltage, or power limits. Treat temperature thresholds as configurable guidance and consult the CPU manufacturer's specifications for the exact thermal limits.
+Read-only monitoring only. The program does not alter fan speeds, voltage, clocks, power limits, or shutdown settings. Do not rely on a single generic temperature threshold as a substitute for hardware-specific thermal guidance.
