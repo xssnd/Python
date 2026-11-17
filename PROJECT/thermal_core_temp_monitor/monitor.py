@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""CPU temperature and Linux thermal-throttling monitor."""
+"""Linux CPU temperature monitor with sensors, dashboard, alerts, and JSON output."""
 from __future__ import annotations
 
 import argparse
@@ -8,9 +8,13 @@ import logging
 import os
 import platform
 import re
+import shutil
 import signal
+import subprocess
+import sys
 import time
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
@@ -20,7 +24,11 @@ except ImportError:
     psutil = None
 
 BASE_DIR = Path(__file__).resolve().parent
-LOG = logging.getLogger("thermal-monitor")
+LOG = logging.getLogger("temperature-monitor")
+ANSI = {"reset": "\033[0m", "bold": "\033[1m", "green": "\033[32m",
+        "yellow": "\033[33m", "red": "\033[31m", "cyan": "\033[36m",
+        "dim": "\033[2m"}
+TEMP_RE = re.compile(r"^\s*([^:]+):\s*([+-]?\d+(?:\.\d+)?)\s*°?C\b", re.I)
 
 
 @dataclass
@@ -38,72 +46,90 @@ class ThrottleCounter:
     path: str
 
 
-def _read_text(path: Path) -> Optional[str]:
+def read_text(path: Path) -> Optional[str]:
     try:
         return path.read_text(encoding="utf-8").strip()
     except (OSError, UnicodeError):
         return None
 
 
+def read_sensors(command: str = "sensors", timeout: int = 8) -> list[Temperature]:
+    """Parse lm-sensors human-readable output; ignore limit/threshold lines."""
+    executable = shutil.which(command)
+    if not executable:
+        return []
+    try:
+        result = subprocess.run([executable], capture_output=True, text=True,
+                                timeout=timeout, check=False)
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        LOG.warning("Could not execute sensors: %s", exc)
+        return []
+    if result.returncode != 0:
+        LOG.warning("sensors exited with status %s: %s", result.returncode,
+                    (result.stderr or "").strip()[:300])
+        return []
+    chip = "lm-sensors"
+    readings: list[Temperature] = []
+    for line in result.stdout.splitlines():
+        stripped = line.strip()
+        if not stripped:
+            continue
+        if stripped.endswith(":") and not TEMP_RE.match(line):
+            chip = stripped[:-1]
+            continue
+        match = TEMP_RE.match(line)
+        if match:
+            label, value = match.groups()
+            readings.append(Temperature(chip, label.strip(), float(value), "sensors"))
+    return readings
+
+
 def read_hwmon() -> list[Temperature]:
-    """Read Linux hwmon temperature channels; labels often identify CPU cores."""
-    results: list[Temperature] = []
-    root = Path("/sys/class/hwmon")
-    if not root.exists():
-        return results
-    for hwmon in sorted(root.glob("hwmon*")):
-        chip = _read_text(hwmon / "name") or hwmon.name
+    readings: list[Temperature] = []
+    for hwmon in sorted(Path("/sys/class/hwmon").glob("hwmon*")):
+        chip = read_text(hwmon / "name") or hwmon.name
         for inp in sorted(hwmon.glob("temp*_input")):
-            raw = _read_text(inp)
+            raw = read_text(inp)
             if raw is None:
                 continue
             try:
-                value = float(raw) / 1000.0
+                value = float(raw) / 1000
             except ValueError:
                 continue
             stem = inp.name.removesuffix("_input")
-            label = _read_text(hwmon / f"{stem}_label") or stem
-            results.append(Temperature(chip, label, value, str(inp)))
-    return results
+            label = read_text(hwmon / f"{stem}_label") or stem
+            readings.append(Temperature(chip, label, value, "hwmon"))
+    return readings
 
 
-def read_psutil_temperatures() -> list[Temperature]:
-    """Read sensors exposed by psutil (primarily Linux and some BSD systems)."""
+def read_psutil() -> list[Temperature]:
     if psutil is None or not hasattr(psutil, "sensors_temperatures"):
         return []
     try:
         groups = psutil.sensors_temperatures(fahrenheit=False) or {}
     except (OSError, RuntimeError):
         return []
-    results = []
-    for chip, entries in groups.items():
-        for entry in entries:
-            if entry.current is None:
-                continue
-            results.append(Temperature(chip, entry.label or chip, float(entry.current), "psutil"))
-    return results
+    return [Temperature(chip, entry.label or chip, float(entry.current), "psutil")
+            for chip, entries in groups.items() if entry.current is not None]
 
 
-def read_temperatures() -> list[Temperature]:
-    """Prefer hwmon's explicit labels; use psutil as a fallback."""
-    hwmon = read_hwmon()
-    psutil_values = read_psutil_temperatures()
-    seen = {(x.sensor, x.label, round(x.celsius, 1)) for x in hwmon}
-    return hwmon + [x for x in psutil_values
-                    if (x.sensor, x.label, round(x.celsius, 1)) not in seen]
+def collect_temperatures(command: str = "sensors") -> list[Temperature]:
+    """Prefer sensors output and supplement it with non-duplicate OS readings."""
+    readings = read_sensors(command) + read_hwmon() + read_psutil()
+    unique: dict[tuple[str, str, float], Temperature] = {}
+    for item in readings:
+        key = (item.sensor.casefold(), item.label.casefold(), round(item.celsius, 1))
+        unique.setdefault(key, item)
+    return sorted(unique.values(), key=lambda item: item.celsius, reverse=True)
 
 
 def read_throttle_counters() -> list[ThrottleCounter]:
-    """Read Linux kernel thermal-throttle counters when the CPU driver exposes them."""
+    counters = []
     root = Path("/sys/devices/system/cpu")
-    counters: list[ThrottleCounter] = []
-    if not root.exists():
-        return counters
     for cpu_dir in sorted(root.glob("cpu[0-9]*")):
-        throttle = cpu_dir / "thermal_throttle"
         for filename in ("core_throttle_count", "package_throttle_count"):
-            path = throttle / filename
-            raw = _read_text(path)
+            path = cpu_dir / "thermal_throttle" / filename
+            raw = read_text(path)
             if raw is not None:
                 try:
                     counters.append(ThrottleCounter(f"{cpu_dir.name}:{filename}", int(raw), str(path)))
@@ -113,131 +139,173 @@ def read_throttle_counters() -> list[ThrottleCounter]:
 
 
 def load_config(path: Path) -> dict:
-    defaults = {
-        "interval_seconds": 5,
-        "warning_celsius": 80,
-        "critical_celsius": 90,
-        "consecutive_samples": 2,
-        "cooldown_seconds": 300,
-        "log_file": "thermal_monitor.log",
-        "alerts": {"telegram": {"enabled": False}, "discord": {"enabled": False},
-                   "email": {"enabled": False}}
+    config = {
+        "interval_seconds": 5, "warning_celsius": 80.0, "critical_celsius": 90.0,
+        "consecutive_samples": 2, "cooldown_seconds": 300,
+        "log_file": "temperature_monitor.log",
+        "alerts": {"telegram": {"enabled": False}, "discord": {"enabled": False}},
     }
     if path.exists():
         user = json.loads(path.read_text(encoding="utf-8"))
-        defaults.update(user)
-        defaults["alerts"] = {**defaults["alerts"], **user.get("alerts", {})}
-    if not (1 <= int(defaults["interval_seconds"]) <= 3600):
+        if not isinstance(user, dict):
+            raise ValueError("Configuration root must be a JSON object")
+        config.update({k: v for k, v in user.items() if k != "alerts"})
+        config["alerts"].update(user.get("alerts", {}))
+    config["interval_seconds"] = int(config["interval_seconds"])
+    config["consecutive_samples"] = int(config["consecutive_samples"])
+    config["cooldown_seconds"] = int(config["cooldown_seconds"])
+    config["warning_celsius"] = float(config["warning_celsius"])
+    config["critical_celsius"] = float(config["critical_celsius"])
+    if not 1 <= config["interval_seconds"] <= 3600:
         raise ValueError("interval_seconds must be between 1 and 3600")
-    if float(defaults["warning_celsius"]) >= float(defaults["critical_celsius"]):
-        raise ValueError("warning_celsius must be lower than critical_celsius")
-    if int(defaults["consecutive_samples"]) < 1:
-        raise ValueError("consecutive_samples must be at least 1")
-    return defaults
+    if not -20 <= config["warning_celsius"] < config["critical_celsius"] <= 150:
+        raise ValueError("temperature thresholds must satisfy -20 <= warning < critical <= 150")
+    if config["consecutive_samples"] < 1 or config["cooldown_seconds"] < 0:
+        raise ValueError("consecutive_samples must be >= 1 and cooldown_seconds >= 0")
+    return config
+
+
+def color(text: str, level: str, enabled: bool) -> str:
+    return f"{ANSI.get(level, '')}{text}{ANSI['reset']}" if enabled else text
+
+
+def render_dashboard(readings: list[Temperature], warning: float, critical: float,
+                     counters: list[ThrottleCounter], use_color: bool = True) -> str:
+    now = datetime.now().astimezone().strftime("%Y-%m-%d %H:%M:%S %Z")
+    width = 72
+    lines = [color("╭" + "─" * (width - 2) + "╮", "cyan", use_color),
+             color("│  CPU TEMPERATURE MONITOR".ljust(width - 1) + "│", "bold", use_color),
+             color(("│  " + platform.node() + "  •  " + now)[:width - 1].ljust(width - 1) + "│", "dim", use_color),
+             color("├" + "─" * (width - 2) + "┤", "cyan", use_color)]
+    if not readings:
+        lines.append("│  No temperature readings. Check lm-sensors and sensor permissions.".ljust(width - 1) + "│")
+    for item in readings:
+        state = "CRITICAL" if item.celsius >= critical else "WARNING" if item.celsius >= warning else "NORMAL"
+        level = "red" if state == "CRITICAL" else "yellow" if state == "WARNING" else "green"
+        label = f"{item.sensor}/{item.label}"[:39]
+        bar_len = max(0, min(20, int(max(0, item.celsius) / 110 * 20)))
+        bar = "█" * bar_len + "░" * (20 - bar_len)
+        row = f"│ {label:<39} {item.celsius:6.1f}°C  {bar} {state}"
+        lines.append(color(row[:width - 1].ljust(width - 1) + "│", level, use_color))
+    lines.append(color("├" + "─" * (width - 2) + "┤", "cyan", use_color))
+    lines.append(f"│ Thresholds: warning {warning:.1f}°C | critical {critical:.1f}°C".ljust(width - 1) + "│")
+    if counters:
+        lines.append(f"│ Linux throttle counters available: {len(counters)}".ljust(width - 1) + "│")
+    else:
+        lines.append("│ Linux throttle counters: unavailable on this hardware/driver".ljust(width - 1) + "│")
+    lines.append(color("╰" + "─" * (width - 2) + "╯", "cyan", use_color))
+    return "\n".join(lines)
 
 
 def send_alert(message: str, config: dict) -> None:
-    """Best-effort notifications; missing optional settings never stop monitoring."""
     import urllib.request
     alerts = config.get("alerts", {})
-    telegram = alerts.get("telegram", {})
-    if telegram.get("enabled"):
-        token = os.getenv("TELEGRAM_BOT_TOKEN", telegram.get("bot_token", ""))
-        chat = os.getenv("TELEGRAM_CHAT_ID", telegram.get("chat_id", ""))
+    tg = alerts.get("telegram", {})
+    if tg.get("enabled"):
+        token = os.getenv("TELEGRAM_BOT_TOKEN", tg.get("bot_token", ""))
+        chat = os.getenv("TELEGRAM_CHAT_ID", tg.get("chat_id", ""))
         if token and chat:
             try:
                 import urllib.parse
                 data = urllib.parse.urlencode({"chat_id": chat, "text": message}).encode()
                 req = urllib.request.Request(f"https://api.telegram.org/bot{token}/sendMessage", data=data)
-                urllib.request.urlopen(req, timeout=10).read()
+                with urllib.request.urlopen(req, timeout=10) as response:
+                    response.read()
             except Exception as exc:
                 LOG.error("Telegram notification failed: %s", exc)
         else:
-            LOG.warning("Telegram enabled but token/chat ID is missing")
-    discord = alerts.get("discord", {})
-    if discord.get("enabled"):
-        url = os.getenv("DISCORD_WEBHOOK_URL", discord.get("webhook_url", ""))
+            LOG.warning("Telegram is enabled but credentials are missing")
+    dc = alerts.get("discord", {})
+    if dc.get("enabled"):
+        url = os.getenv("DISCORD_WEBHOOK_URL", dc.get("webhook_url", ""))
         if url:
             try:
                 payload = json.dumps({"content": message}).encode()
                 req = urllib.request.Request(url, data=payload, headers={"Content-Type": "application/json"})
-                urllib.request.urlopen(req, timeout=10).read()
+                with urllib.request.urlopen(req, timeout=10) as response:
+                    response.read()
             except Exception as exc:
                 LOG.error("Discord notification failed: %s", exc)
         else:
-            LOG.warning("Discord enabled but webhook URL is missing")
-
-
-def format_report(temps: list[Temperature], counters: list[ThrottleCounter]) -> str:
-    lines = [f"Thermal Monitor | {platform.node()} | {time.strftime('%Y-%m-%d %H:%M:%S')}"]
-    if temps:
-        lines.extend(f"- {t.sensor} / {t.label}: {t.celsius:.1f} °C [{t.source}]" for t in temps)
-    else:
-        lines.append("- No temperature sensors exposed by this OS/hardware.")
-    if counters:
-        lines.append("Linux thermal-throttle counters:")
-        lines.extend(f"- {c.name}: {c.count}" for c in counters)
-    else:
-        lines.append("Thermal-throttle counters: unavailable on this system/driver.")
-    return "\n".join(lines)
+            LOG.warning("Discord is enabled but DISCORD_WEBHOOK_URL is missing")
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Monitor CPU temperatures and thermal-throttling counters.")
+    parser = argparse.ArgumentParser(description="Live CPU temperature monitor using lm-sensors.")
     parser.add_argument("-c", "--config", type=Path, default=BASE_DIR / "config.json")
-    parser.add_argument("--once", action="store_true", help="Collect one sample and exit.")
+    parser.add_argument("-i", "--interval", type=int, help="sampling interval in seconds")
+    parser.add_argument("--warning", type=float, help="warning threshold in Celsius")
+    parser.add_argument("--critical", type=float, help="critical threshold in Celsius")
+    parser.add_argument("--once", action="store_true", help="take one reading and exit")
+    parser.add_argument("--json", action="store_true", help="print machine-readable JSON")
+    parser.add_argument("--no-color", action="store_true", help="disable colored dashboard")
+    parser.add_argument("--sensors-command", default="sensors", help="lm-sensors executable name/path")
     args = parser.parse_args()
-    config = load_config(args.config)
-    log_path = Path(config.get("log_file", "thermal_monitor.log"))
+    try:
+        config = load_config(args.config)
+        interval = args.interval if args.interval is not None else config["interval_seconds"]
+        warning = args.warning if args.warning is not None else config["warning_celsius"]
+        critical = args.critical if args.critical is not None else config["critical_celsius"]
+        if not 1 <= interval <= 3600 or not -20 <= warning < critical <= 150:
+            raise ValueError("invalid interval or thresholds (require -20 <= warning < critical <= 150)")
+    except (OSError, ValueError, json.JSONDecodeError) as exc:
+        print(f"Configuration error: {exc}", file=sys.stderr)
+        return 2
+
+    log_path = Path(config["log_file"])
     if not log_path.is_absolute():
         log_path = BASE_DIR / log_path
-    logging.basicConfig(level=logging.INFO,
-                        format="%(asctime)s %(levelname)s %(message)s",
-                        handlers=[logging.StreamHandler(), logging.FileHandler(log_path, encoding="utf-8")])
-    stop = False
-
-    def request_stop(_signum, _frame):
-        nonlocal stop
-        stop = True
-
-    signal.signal(signal.SIGINT, request_stop)
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s",
+                        handlers=[logging.StreamHandler(sys.stderr),
+                                  logging.FileHandler(log_path, encoding="utf-8")])
+    stopped = False
+    def stop(_signum, _frame):
+        nonlocal stopped
+        stopped = True
+    signal.signal(signal.SIGINT, stop)
     if hasattr(signal, "SIGTERM"):
-        signal.signal(signal.SIGTERM, request_stop)
+        signal.signal(signal.SIGTERM, stop)
 
-    hot_streak = 0
-    last_alert = 0.0
-    previous_counts: dict[str, int] = {}
-    while not stop:
-        temps = read_temperatures()
+    streak, last_alert = 0, 0.0
+    previous = {}
+    while not stopped:
+        readings = collect_temperatures(args.sensors_command)
         counters = read_throttle_counters()
-        report = format_report(temps, counters)
-        LOG.info("\n%s", report)
-        hottest = max((t.celsius for t in temps), default=None)
-        current_counts = {c.name: c.count for c in counters}
-        throttle_events = [name for name, count in current_counts.items()
-                           if count > previous_counts.get(name, count)]
-        previous_counts = current_counts
-        critical = hottest is not None and hottest >= float(config["critical_celsius"])
-        warning = hottest is not None and hottest >= float(config["warning_celsius"])
-        hot_streak = hot_streak + 1 if critical else 0
-        reason = []
-        if warning:
-            reason.append(f"temperature reached {hottest:.1f} °C")
+        hottest = max((x.celsius for x in readings), default=None)
+        now = datetime.now(timezone.utc).isoformat()
+        if args.json:
+            print(json.dumps({"timestamp": now, "hostname": platform.node(),
+                              "readings": [asdict(x) for x in readings],
+                              "hottest_celsius": hottest, "warning_celsius": warning,
+                              "critical_celsius": critical,
+                              "throttle_counters": [asdict(x) for x in counters]}), flush=True)
+        else:
+            if sys.stdout.isatty():
+                print("\033[2J\033[H", end="")
+            print(render_dashboard(readings, warning, critical, counters, not args.no_color and sys.stdout.isatty()),
+                  flush=True)
+        current = {x.name: x.count for x in counters}
+        throttle_events = [name for name, count in current.items() if count > previous.get(name, count)]
+        previous = current
+        is_critical = hottest is not None and hottest >= critical
+        streak = streak + 1 if is_critical else 0
+        if hottest is not None and hottest >= warning:
+            LOG.warning("Temperature threshold reached: hottest sensor %.1f°C", hottest)
         if throttle_events:
-            reason.append("thermal-throttle counter increased: " + ", ".join(throttle_events))
-        should_alert = bool(reason) and (hot_streak >= int(config["consecutive_samples"]) or throttle_events)
-        now = time.monotonic()
-        if should_alert and now - last_alert >= int(config["cooldown_seconds"]):
-            send_alert("⚠️ CPU thermal warning on " + platform.node() + "\n" +
-                       "; ".join(reason) + "\n\n" + report, config)
-            last_alert = now
+            LOG.warning("Thermal throttling counter increased: %s", ", ".join(throttle_events))
+        should_alert = (streak >= config["consecutive_samples"] or bool(throttle_events))
+        monotonic_now = time.monotonic()
+        if should_alert and monotonic_now - last_alert >= config["cooldown_seconds"]:
+            send_alert(f"⚠️ CPU OVERHEATING on {platform.node()}\nHottest: {hottest:.1f}°C\n"
+                       f"Critical threshold: {critical:.1f}°C", config)
+            last_alert = monotonic_now
         if args.once:
-            break
-        for _ in range(int(config["interval_seconds"])):
-            if stop:
+            return 0 if readings else 1
+        for _ in range(interval):
+            if stopped:
                 break
             time.sleep(1)
-    LOG.info("Thermal monitor stopped.")
+    LOG.info("Temperature monitor stopped.")
     return 0
 
 
