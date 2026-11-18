@@ -47,3 +47,11 @@ A Python utility that records local host uptime and remote HTTP/TCP availability
 - [Project documentation and installation](uptime_logger/README.md)
 - [Example configuration](uptime_logger/config.example.json)
 - [Main monitor](uptime_logger/monitor.py)
+
+## Zombie Process Cleaner
+
+A Linux-first utility that detects zombie processes, identifies their parent processes, and optionally sends a confirmed SIGCHLD signal. Read-only by default, with live monitoring and JSON/CSV reports.
+
+- [Project documentation and installation](zombie_process_cleaner/README.md)
+- [Dependencies](zombie_process_cleaner/requirements.txt)
+- [Main monitor](zombie_process_cleaner/monitor.py)
