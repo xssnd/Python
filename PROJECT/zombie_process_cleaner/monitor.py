@@ -2,7 +2,6 @@
 """Detect Linux zombie processes and safely inspect their parent processes."""
 from __future__ import annotations
 import argparse, csv, json, logging, os, signal, sys, time
-from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -236,7 +235,7 @@ def main(argv=None):
         if not sys.platform.startswith("linux"):
             raise RuntimeError("Zombie detection currently requires Linux /proc process-state support.")
         return run(args)
-    except (RuntimeError, ValueError, OSError, psutil.Error) as exc:
+    except Exception as exc:
         LOG.error("%s", exc)
         return 2
 
