@@ -32,6 +32,14 @@ A configurable Python process supervisor that detects stopped critical processes
 - [Example configuration](process_watcher/config.example.json)
 - [Main watcher](process_watcher/monitor.py)
 
+## Top Resource Consumers
+
+A read-only, cross-platform CLI that ranks processes by CPU and RAM usage, with live monitoring and JSON/CSV export.
+
+- [Project documentation and installation](top_resource_consumers/README.md)
+- [Dependencies](top_resource_consumers/requirements.txt)
+- [Main monitor](top_resource_consumers/monitor.py)
+
 ## Uptime Logger
 
 A Python utility that records local host uptime and remote HTTP/TCP availability to CSV, calculates sample-based availability, and sends outage/recovery notifications.
