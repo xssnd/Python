@@ -10,7 +10,7 @@ A Python utility that monitors CPU and RAM utilization and sends threshold alert
 
 ## Thermal & Core Temp Monitor
 
-A Linux-first CPU temperature monitor using `lm-sensors`, with a live CLI dashboard, overheating alerts, JSON output, and optional Telegram/Discord notifications.
+A Linux-first CPU temperature monitor using lm-sensors, with a live CLI dashboard, overheating alerts, JSON output, and optional Telegram/Discord notifications.
 
 - [Project documentation and installation](thermal_core_temp_monitor/README.md)
 - [Example configuration](thermal_core_temp_monitor/config.example.json)
@@ -63,3 +63,11 @@ A cross-platform CLI that monitors RX/TX throughput and cumulative byte counters
 - [Project documentation and installation](network_bandwidth_tracker/README.md)
 - [Dependencies](network_bandwidth_tracker/requirements.txt)
 - [Main monitor](network_bandwidth_tracker/monitor.py)
+
+## Open Ports Checker
+
+A read-only CLI that inventories listening TCP sockets and locally bound UDP ports, identifies owning processes where permissions allow, and highlights wildcard-bound sockets.
+
+- [Project documentation and installation](open_ports_checker/README.md)
+- [Dependencies](open_ports_checker/requirements.txt)
+- [Main monitor](open_ports_checker/monitor.py)
