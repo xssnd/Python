@@ -55,3 +55,11 @@ A Linux-first utility that detects zombie processes, identifies their parent pro
 - [Project documentation and installation](zombie_process_cleaner/README.md)
 - [Dependencies](zombie_process_cleaner/requirements.txt)
 - [Main monitor](zombie_process_cleaner/monitor.py)
+
+## Network Bandwidth Tracker
+
+A cross-platform CLI that monitors RX/TX throughput and cumulative byte counters for selected network interfaces, with a live dashboard, threshold warnings, and CSV/JSONL export.
+
+- [Project documentation and installation](network_bandwidth_tracker/README.md)
+- [Dependencies](network_bandwidth_tracker/requirements.txt)
+- [Main monitor](network_bandwidth_tracker/monitor.py)
