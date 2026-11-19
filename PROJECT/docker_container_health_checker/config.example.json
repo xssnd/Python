@@ -1,0 +1,23 @@
+{
+  "settings": {
+    "interval_seconds": 15,
+    "auto_restart": true,
+    "restart_cooldown_seconds": 120,
+    "max_restart_attempts": 3,
+    "retry_window_seconds": 900,
+    "restart_timeout_seconds": 30,
+    "include_containers": [],
+    "exclude_containers": [],
+    "log_file": "docker_health_checker.log"
+  },
+  "containers": [
+    {
+      "name": "example-api",
+      "auto_restart": true
+    },
+    {
+      "name": "critical-database",
+      "auto_restart": false
+    }
+  ]
+}
