@@ -71,3 +71,11 @@ A read-only CLI that inventories listening TCP sockets and locally bound UDP por
 - [Project documentation and installation](open_ports_checker/README.md)
 - [Dependencies](open_ports_checker/requirements.txt)
 - [Main monitor](open_ports_checker/monitor.py)
+
+## Docker Container Health Checker
+
+A Docker CLI-based monitor that tracks container Healthcheck states and can safely restart running containers reported as unhealthy, with cooldowns, retry limits, dry-run mode, and JSON output.
+
+- [Project documentation and installation](docker_container_health_checker/README.md)
+- [Example configuration](docker_container_health_checker/config.example.json)
+- [Main monitor](docker_container_health_checker/monitor.py)
