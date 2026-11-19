@@ -272,7 +272,7 @@ def run(args):
 
         if args.duration is not None and time.monotonic() - started >= args.duration:
             break
-        if not args.watch:
+        if not args.watch and args.duration is None:
             break
     return 0
 
