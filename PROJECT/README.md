@@ -24,6 +24,14 @@ A cross-platform Python utility that monitors mounted partitions and alerts when
 - [Example configuration](disk_space_monitor/config.example.json)
 - [Main monitor](disk_space_monitor/monitor.py)
 
+## Inode Usage Monitor
+
+A Linux-first, read-only CLI that monitors inode consumption across mounted filesystems and detects inode exhaustion independently of disk-space usage.
+
+- [Project documentation and installation](inode_usage_monitor/README.md)
+- [Dependencies](inode_usage_monitor/requirements.txt)
+- [Main monitor](inode_usage_monitor/monitor.py)
+
 ## Process Watcher
 
 A configurable Python process supervisor that detects stopped critical processes and runs user-defined restart commands with retry limits, cooldowns, and notifications.
