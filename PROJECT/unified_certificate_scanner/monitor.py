@@ -85,7 +85,7 @@ def parse_ports(values):
     return ports
 
 
-def extract_certificate(der_bytes, target, port, timestamp, tls_version, cipher, warning_days):
+def extract_certificate(der_bytes, target, port, timestamp, tls_version, cipher, warning_days, expected_name=None):
     if x509 is None:
         raise RuntimeError("Missing dependency: install with python -m pip install -r requirements.txt")
     cert = x509.load_der_x509_certificate(der_bytes)
@@ -137,7 +137,7 @@ def extract_certificate(der_bytes, target, port, timestamp, tls_version, cipher,
         statuses.append("NOT_YET_VALID")
     if san_status == "INVALID":
         statuses.append("INVALID_SAN")
-    if not identity_match:
+    if not expected_name and not identity_match:
         statuses.append("IP_SAN_MISMATCH")
     if not statuses:
         statuses.append("OK")
@@ -175,7 +175,7 @@ def scan_endpoint(target, port, timeout, expected_name=None, verify_chain=True, 
                 version = tls.version()
                 cipher_info = tls.cipher()
             cert_result = extract_certificate(der, target, port, timestamp, version,
-                                               cipher_info[0] if cipher_info else "", warning_days)
+                                               cipher_info[0] if cipher_info else "", warning_days, expected_name)
         if verify_chain:
             name = expected_name or target
             try:
