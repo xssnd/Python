@@ -85,14 +85,16 @@ def parse_ports(values):
     return ports
 
 
-def extract_certificate(der_bytes, target, port, timestamp, tls_version, cipher):
+def extract_certificate(der_bytes, target, port, timestamp, tls_version, cipher, warning_days):
     if x509 is None:
         raise RuntimeError("Missing dependency: install with python -m pip install -r requirements.txt")
     cert = x509.load_der_x509_certificate(der_bytes)
     try:
         san_ext = cert.extensions.get_extension_for_oid(ExtensionOID.SUBJECT_ALTERNATIVE_NAME).value
-        dns_names = sorted(set(san_ext.get_values_for_type(x509.DNSName)))
-        ip_names = sorted(str(value) for value in san_ext.get_values_for_type(x509.IPAddress))
+        raw_dns_names = san_ext.get_values_for_type(x509.DNSName)
+        raw_ip_names = [str(value) for value in san_ext.get_values_for_type(x509.IPAddress)]
+        dns_names = sorted(set(raw_dns_names))
+        ip_names = sorted(set(raw_ip_names))
         uri_names = sorted(set(san_ext.get_values_for_type(x509.UniformResourceIdentifier)))
         email_names = sorted(set(san_ext.get_values_for_type(x509.RFC822Name)))
         san_present = True
@@ -119,7 +121,7 @@ def extract_certificate(der_bytes, target, port, timestamp, tls_version, cipher)
         san_problems.append("missing SAN extension")
     if not dns_names and not ip_names:
         san_problems.append("no DNS/IP SAN entries")
-    if len(dns_names) != len(set(dns_names)) or len(ip_names) != len(set(ip_names)):
+    if len(raw_dns_names) != len(dns_names) or len(raw_ip_names) != len(ip_names):
         san_problems.append("duplicate SAN entries")
     san_status = "INVALID" if san_problems else "PRESENT"
 
@@ -129,7 +131,7 @@ def extract_certificate(der_bytes, target, port, timestamp, tls_version, cipher)
     statuses = []
     if is_expired:
         statuses.append("EXPIRED")
-    elif days_remaining <= 30:
+    elif days_remaining <= warning_days:
         statuses.append("EXPIRING_SOON")
     if not_yet_valid:
         statuses.append("NOT_YET_VALID")
@@ -154,7 +156,7 @@ def extract_certificate(der_bytes, target, port, timestamp, tls_version, cipher)
     }
 
 
-def scan_endpoint(target, port, timeout, expected_name=None, verify_chain=True):
+def scan_endpoint(target, port, timeout, expected_name=None, verify_chain=True, warning_days=30):
     timestamp = utc_now().isoformat(timespec="seconds")
     result = {"timestamp_utc": timestamp, "target": target, "port": port,
               "status": "UNREACHABLE", "subject": "", "issuer": "", "serial_number": "",
@@ -173,7 +175,7 @@ def scan_endpoint(target, port, timeout, expected_name=None, verify_chain=True):
                 version = tls.version()
                 cipher_info = tls.cipher()
             cert_result = extract_certificate(der, target, port, timestamp, version,
-                                               cipher_info[0] if cipher_info else "")
+                                               cipher_info[0] if cipher_info else "", warning_days)
         if verify_chain:
             name = expected_name or target
             try:
@@ -294,7 +296,7 @@ def run(args):
     records = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=args.workers) as pool:
         futures = [pool.submit(scan_endpoint, host, port, args.timeout, args.expected_name,
-                               not args.no_chain_check) for host, port in jobs]
+                               not args.no_chain_check, args.expiry_warning_days) for host, port in jobs]
         for future in concurrent.futures.as_completed(futures):
             records.append(future.result())
     records.sort(key=lambda row: (ipaddress.ip_address(row["target"]).version,
