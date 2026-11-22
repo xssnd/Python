@@ -126,6 +126,15 @@ def ubuntu_oval_summary() -> dict[str, Any]:
     # Official Ubuntu OVAL feeds, version-specific; select a feed based on detected release.
     osinfo = get_os()
     release = osinfo.get("distro_version", "")
+    if osinfo.get("system") == "Linux":
+        try:
+            with open("/etc/os-release", encoding="utf-8") as os_file:
+                for os_line in os_file:
+                    if os_line.startswith("VERSION_CODENAME="):
+                        release = os_line.split("=", 1)[1].strip().strip("\\"")
+                        break
+        except OSError:
+            pass
     url = "https://security.ubuntu.com/oval/com.ubuntu." + (release or "unknown") + ".usn.oval.xml"
     try:
         req = Request(url, headers={"User-Agent": USER_AGENT})
