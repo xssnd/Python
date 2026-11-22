@@ -15,7 +15,7 @@ class ScannerTests(unittest.TestCase):
 
     def test_expand_ipv6_small_network(self):
         self.assertEqual(expand_targets(parse_networks(["2001:db8::/126"]), 4),
-                         ["2001:db8::1", "2001:db8::2"])
+                         ["2001:db8::1", "2001:db8::2", "2001:db8::3"])
 
     def test_host_limit_rejects_large_range(self):
         with self.assertRaises(ValueError):
