@@ -56,6 +56,14 @@ A Python utility that records local host uptime and remote HTTP/TCP availability
 - [Example configuration](uptime_logger/config.example.json)
 - [Main monitor](uptime_logger/monitor.py)
 
+## Unified Certificate Expiry & SAN Scanner
+
+A read-only TLS certificate auditor for explicitly authorized IPv4/IPv6 subnets. Checks expiry, SAN presence/identity, and trust-chain validation on ports 443, 636, and 8443 by default.
+
+- [Project documentation and installation](unified_certificate_scanner/README.md)
+- [Dependencies](unified_certificate_scanner/requirements.txt)
+- [Main scanner](unified_certificate_scanner/monitor.py)
+
 ## Zombie Process Cleaner
 
 A Linux-first utility that detects zombie processes, identifies their parent processes, and optionally sends a confirmed SIGCHLD signal. Read-only by default, with live monitoring and JSON/CSV reports.
