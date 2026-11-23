@@ -1,5 +1,13 @@
 # Python Projects
 
+## Automated S3 / MinIO Backup Rotator & Integrity Verifier
+
+Compresses target directories, encrypts with AES-256-GCM authenticated chunks, uploads to S3-compatible storage, verifies random or all chunks via ranged downloads, and rotates old backups.
+
+- [Documentation and installation](automated_s3_minio_backup_rotator/README.md)
+- [Dependencies](automated_s3_minio_backup_rotator/requirements.txt)
+- [CLI script](automated_s3_minio_backup_rotator/backup_rotator.py)
+
 ## CPU & Memory Usage Alert
 
 A Python utility that monitors CPU and RAM utilization and sends threshold alerts through Telegram, Discord, and/or SMTP email.
