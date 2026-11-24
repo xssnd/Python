@@ -58,7 +58,7 @@ def emit(rows,fmt):
         for r in rows: w.writerow({**r,"reasons":";".join(r["reasons"])})
     else:
         for r in rows:
-            print(f"\033[31m[ANOMALY {r['score"]:.2f}]\033[0m {r['source']} | {r['line']}")
+            print("[ANOMALY %.2f] %s | %s" % (r["score"], r["source"], r["line"]))
             if r["reasons"]: print("  reasons: "+", ".join(r["reasons"]))
 
 def read_file(path):
