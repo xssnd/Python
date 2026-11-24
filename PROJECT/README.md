@@ -103,3 +103,10 @@ A Docker CLI-based monitor that tracks container Healthcheck states and can safe
 - [Project documentation and installation](docker_container_health_checker/README.md)
 - [Example configuration](docker_container_health_checker/config.example.json)
 - [Main monitor](docker_container_health_checker/monitor.py)
+## Smart Log Anomaly Grepper
+
+A lightweight, local-first log anomaly detector using token rarity, normalized template novelty, and character entropy for Linux text logs and Windows Event Logs.
+
+- [Documentation and installation](smart_log_anomaly_grepper/README.md)
+- [Example configuration](smart_log_anomaly_grepper/config.example.json)
+- [CLI script](smart_log_anomaly_grepper/grepper.py)
