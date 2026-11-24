@@ -1,0 +1,17 @@
+{
+  "threshold": 5.0,
+  "min_line_length": 12,
+  "max_line_length": 20000,
+  "ignore_patterns": [
+    "^DEBUG:"
+  ],
+  "allow_patterns": [
+    "known benign message pattern"
+  ],
+  "windows_channels": [
+    "System",
+    "Application"
+  ],
+  "windows_event_level": 3,
+  "windows_max_events": 500
+}
