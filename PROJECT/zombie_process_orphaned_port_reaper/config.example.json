@@ -1,0 +1,7 @@
+{
+  "settings": {"interval_seconds":30,"idle_hours":2,"cpu_percent_threshold":20,"memory_mb_threshold":512,"restart_cooldown_seconds":3600,"max_restarts_per_day":1},
+  "processes": [
+    {"name":"nginx","match":["nginx"],"systemd_service":"nginx.service"},
+    {"name":"worker","match":["my-worker"],"systemd_service":"my-worker.service"}
+  ]
+}
