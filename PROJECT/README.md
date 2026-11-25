@@ -110,3 +110,12 @@ A lightweight, local-first log anomaly detector using token rarity, normalized t
 - [Documentation and installation](smart_log_anomaly_grepper/README.md)
 - [Example configuration](smart_log_anomaly_grepper/config.example.json)
 - [CLI script](smart_log_anomaly_grepper/grepper.py)
+
+## Zombie Process & Orphaned Port Reaper
+
+Monitor configured processes for high CPU/RAM combined with disk-I/O inactivity; report listener ports and optionally restart allowlisted systemd units.
+
+- [Documentation and usage](zombie_process_orphaned_port_reaper/README.md)
+- [Example configuration](zombie_process_orphaned_port_reaper/config.example.json)
+- [Dependencies](zombie_process_orphaned_port_reaper/requirements.txt)
+- [Main monitor](zombie_process_orphaned_port_reaper/monitor.py)
