@@ -84,3 +84,15 @@ The parser supports common domain entries and basic adblock domain rules. It is 
 ## Limitations
 This is a hosts-file updater—not a DNS resolver, DNS cache, DHCP/router manager, or DNS-over-HTTPS filter. Hosts files do not support wildcard subdomains. For enterprise deployment, consider DNS filtering products and central management.
 
+## Automatic periodic updates
+
+The updater intentionally does not create scheduler entries automatically. Use your OS scheduler after validating a dry run.
+
+**Linux/macOS cron** (example: every day at 03:30; adjust the Python/script paths and privileges):
+```cron
+30 3 * * * root /usr/bin/python3 /opt/local_dns_sinkhole_updater/updater.py --config /opt/local_dns_sinkhole_updater/feeds.json update >> /var/log/dns-blocklist-update.log 2>&1
+```
+If using `crontab -e` for root, omit the `root` field.
+
+**Windows Task Scheduler**: create a daily task, set `python.exe` as the program, and use arguments `C:\path\updater.py --config C:\path\feeds.json update`. Configure the task to run with elevated privileges because the hosts file is protected. Review task history and logs after the first run.
+
