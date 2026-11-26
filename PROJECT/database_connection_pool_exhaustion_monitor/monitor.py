@@ -51,7 +51,7 @@ def get_socket_count(host: str, port: int) -> tuple[int, str]:
             parts = line.split()
             # Windows netstat: protocol, local, foreign, state, PID
             # Unix netstat: proto, recv, send, local, foreign, state
-            endpoint = parts[-2] if system == "windows" and len(parts) >= 4 else (parts[-2] if len(parts) >= 6 else parts[-1])
+            endpoint = parts[-3] if system == "windows" and len(parts) >= 4 else (parts[-2] if len(parts) >= 6 else parts[-1])
             if endpoint_matches(endpoint, host, port):
                 count += 1
         return count, "netstat"
