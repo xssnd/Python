@@ -126,4 +126,12 @@ Cross-platform hosts-file updater that aggregates threat-intelligence/ad domain 
 
 - [Documentation and usage](local_dns_sinkhole_updater/README.md)
 - [Example feeds/config](local_dns_sinkhole_updater/feeds.example.json)
-- [Updater CLI](local_dns_sinkhole_updater/updater.py)
+- [Updater CLI](local_dns_sinkhole_updater/updater.py)\n\n## Database Connection Pool Exhaustion Monitor
+
+A cross-platform monitor for established TCP connections to PostgreSQL, MySQL, and Microsoft SQL Server, with optional server-side connection counts and configured limits.
+
+- [Documentation and installation](database_connection_pool_exhaustion_monitor/README.md)
+- [Example configuration](database_connection_pool_exhaustion_monitor/config.example.json)
+- [Optional dependencies](database_connection_pool_exhaustion_monitor/requirements.txt)
+- [Main monitor](database_connection_pool_exhaustion_monitor/monitor.py)
+
