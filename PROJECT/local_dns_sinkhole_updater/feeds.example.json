@@ -1,0 +1,11 @@
+{
+  "feeds": [
+    "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts",
+    "https://raw.githubusercontent.com/AdAway/adaway.github.io/master/hosts.txt"
+  ],
+  "allowlist": [],
+  "block_ipv4": "0.0.0.0",
+  "block_ipv6": "::",
+  "timeout": 20,
+  "max_bytes": 25000000
+}
