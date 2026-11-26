@@ -119,3 +119,11 @@ Monitor configured processes for high CPU/RAM combined with disk-I/O inactivity;
 - [Example configuration](zombie_process_orphaned_port_reaper/config.example.json)
 - [Dependencies](zombie_process_orphaned_port_reaper/requirements.txt)
 - [Main monitor](zombie_process_orphaned_port_reaper/monitor.py)
+
+## Local DNS Sinkhole & Ad/Malware Blocklist Updater
+
+Cross-platform hosts-file updater that aggregates threat-intelligence/ad domain feeds, supports an allowlist, preserves unrelated hosts entries, and creates timestamped backups.
+
+- [Documentation and usage](local_dns_sinkhole_updater/README.md)
+- [Example feeds/config](local_dns_sinkhole_updater/feeds.example.json)
+- [Updater CLI](local_dns_sinkhole_updater/updater.py)
