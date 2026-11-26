@@ -1,0 +1,12 @@
+{
+  "db_type": "postgresql",
+  "host": "127.0.0.1",
+  "port": 5432,
+  "database": "postgres",
+  "username": "monitor_user",
+  "warning": 75,
+  "critical": 90,
+  "interval": 30,
+  "duration": 0,
+  "csv": "logs/db-connections.csv"
+}
