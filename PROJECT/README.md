@@ -144,3 +144,11 @@ A log-driven IP blocking tool with threshold/window detection, allowlists, dry-r
 - [Example configuration](dynamic_firewall_blacklist_sync/config.example.json)
 - [CLI script](dynamic_firewall_blacklist_sync/dynamic_firewall_sync.py)
 - [Parser tests](dynamic_firewall_blacklist_sync/tests/test_parser.py)
+
+## Hardware Inventory & Serial Number Harvester
+
+Cross-platform hardware inventory collector for Linux and Windows, including motherboard serial, BIOS/UEFI details, CPU/RAM, disk metadata, optional SMART health, SQLite history, CSV export, JSON output, and periodic scans.
+
+- [Documentation and installation](hardware_inventory_serial_harvester/README.md)
+- [Dependencies](hardware_inventory_serial_harvester/requirements.txt)
+- [Collector CLI](hardware_inventory_serial_harvester/inventory.py)
