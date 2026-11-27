@@ -1,0 +1,6 @@
+{
+  "favorites": ["ssh.service", "nginx.service", "mysql.service", "Spooler"],
+  "deny_actions": ["systemd-logind.service", "sshd.service", "winlogon"],
+  "refresh_interval_seconds": 30,
+  "show_system_services": true
+}
