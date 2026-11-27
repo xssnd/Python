@@ -152,3 +152,14 @@ Cross-platform hardware inventory collector for Linux and Windows, including mot
 - [Documentation and installation](hardware_inventory_serial_harvester/README.md)
 - [Dependencies](hardware_inventory_serial_harvester/requirements.txt)
 - [Collector CLI](hardware_inventory_serial_harvester/inventory.py)
+
+
+## Interactive TUI Service Manager
+
+Cross-platform terminal dashboard for listing and controlling Linux systemd and Windows Services, with search, state/startup visibility, confirmation-protected actions, deny-action config, and JSON/CSV export.
+
+- [Documentation, installation, and usage](service_manager_tui/README.md)
+- [Dependencies](service_manager_tui/requirements.txt)
+- [Sample config](service_manager_tui/config.example.json)
+- [TUI and CLI](service_manager_tui/service_manager.py)
+- [Tests](service_manager_tui/tests/test_service_manager.py)
