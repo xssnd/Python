@@ -135,3 +135,12 @@ A cross-platform monitor for established TCP connections to PostgreSQL, MySQL, a
 - [Optional dependencies](database_connection_pool_exhaustion_monitor/requirements.txt)
 - [Main monitor](database_connection_pool_exhaustion_monitor/monitor.py)
 
+
+## Dynamic Firewall Blacklist Sync
+
+A log-driven IP blocking tool with threshold/window detection, allowlists, dry-run by default, and Linux nftables/iptables plus Windows Defender Firewall backends.
+
+- [Documentation and usage](dynamic_firewall_blacklist_sync/README.md)
+- [Example configuration](dynamic_firewall_blacklist_sync/config.example.json)
+- [CLI script](dynamic_firewall_blacklist_sync/dynamic_firewall_sync.py)
+- [Parser tests](dynamic_firewall_blacklist_sync/tests/test_parser.py)
