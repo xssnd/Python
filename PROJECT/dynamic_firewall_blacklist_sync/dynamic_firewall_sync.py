@@ -58,7 +58,7 @@ def iptables(ip,action,dry,chain):
     else:cmd(["iptables","-D",chain,"-s",ip,"-j","DROP"],dry)
 def windows(ip,action,dry,prefix):
     name=f"{prefix}-{ip}"
-    ps=(f"if (-not (Get-NetFirewallRule -DisplayName '{name}' -ErrorAction SilentlyContinue) "
+    ps=(f"if (-not (Get-NetFirewallRule -DisplayName '{name}' -ErrorAction SilentlyContinue)) "
         f"{{ New-NetFirewallRule -DisplayName '{name}' -Direction Inbound -Action Block -RemoteAddress '{ip}' -Profile Any }}") if action=="block" else f"Remove-NetFirewallRule -DisplayName '{name}' -ErrorAction SilentlyContinue"
     cmd(["powershell","-NoProfile","-NonInteractive","-Command",ps],dry)
 def dispatch(ip,b,a,d,t,c):
