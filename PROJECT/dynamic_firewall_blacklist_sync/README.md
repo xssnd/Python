@@ -3,7 +3,7 @@
 Log-driven defensive IP blocking for Linux nftables/iptables and Windows Defender Firewall. **Dry-run is the default; `--apply` is required for changes.**
 
 ## Features
-- Configurable log sources, suspicious regex signatures, IP extraction patterns.
+- Configurable log sources, suspicious regex signatures, IPv4 extraction patterns (custom regex may be adapted for other formats).
 - Threshold detection, rolling window, allowlist/CIDR exclusions.
 - Ignores loopback, reserved, multicast, unspecified and private IPs by default.
 - nftables timeout-set support, iptables dedicated INPUT chain, Windows named inbound firewall rules.
@@ -34,7 +34,7 @@ python3 dynamic_firewall_sync.py --config config.json
 # Apply after reviewing; Linux examples
 sudo python3 dynamic_firewall_sync.py --config config.json --apply
 sudo python3 dynamic_firewall_sync.py --config config.json --backend nftables --apply
-sudo python3 python dynamic_firewall_sync.py --config config.json --backend iptables --apply
+sudo python3 dynamic_firewall_sync.py --config config.json --backend iptables --apply
 
 # Watch logs (preview unless --apply is given)
 sudo python3 dynamic_firewall_sync.py --config config.json --watch --apply
