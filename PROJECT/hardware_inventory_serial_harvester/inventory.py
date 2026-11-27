@@ -226,9 +226,11 @@ def export_csv(records: list[dict[str, Any]], path: Path) -> None:
     fields = ["collected_at","hostname","os_name","os_version","architecture","manufacturer","model",
         "motherboard_manufacturer","motherboard_product","motherboard_serial","bios_vendor","bios_version",
         "bios_date","cpu_model","cpu_physical_cores","cpu_logical_cores","ram_total_bytes","disks_json","source_json"]
-    with path.open("w", newline="", encoding="utf-8") as f:
+    write_header = not path.exists() or path.stat().st_size == 0
+    with path.open("a", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=fields)
-        writer.writeheader()
+        if write_header:
+            writer.writeheader()
         for record in records:
             row = {k: record.get(k) for k in fields}
             row["disks_json"] = json.dumps(record.get("disks", []), ensure_ascii=False)
