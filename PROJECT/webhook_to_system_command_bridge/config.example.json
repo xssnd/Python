@@ -1,0 +1,23 @@
+{
+  "host": "127.0.0.1",
+  "port": 9080,
+  "log_level": "INFO",
+  "sqlite_path": "./bridge_state.sqlite3",
+  "max_concurrent_actions": 2,
+  "keys": {
+    "ci-prod": "WEBHOOK_BRIDGE_CI_PROD_SECRET"
+  },
+  "actions": {
+    "restart-nginx": {
+      "enabled": true,
+      "argv": ["/usr/bin/sudo", "/usr/bin/systemctl", "restart", "nginx"],
+      "timeout": 60
+    },
+    "deploy-staging": {
+      "enabled": true,
+      "argv": ["/usr/local/sbin/deploy-staging"],
+      "cwd": "/srv/app",
+      "timeout": 900
+    }
+  }
+}
