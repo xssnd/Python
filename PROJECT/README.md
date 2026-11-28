@@ -78,88 +78,11 @@ A Linux-first utility that detects zombie processes, identifies their parent pro
 
 - [Project documentation and installation](zombie_process_cleaner/README.md)
 - [Dependencies](zombie_process_cleaner/requirements.txt)
-- [Main monitor](zombie_process_cleaner/monitor.py)
 
-## Network Bandwidth Tracker
+## Webhook-to-System-Command Bridge
 
-A cross-platform CLI that monitors RX/TX throughput and cumulative byte counters for selected network interfaces, with a live dashboard, threshold warnings, and CSV/JSONL export.
+A minimal internal CI/CD webhook server that verifies HMAC-SHA256 signatures, timestamp freshness, and one-time nonces before dispatching allowlisted actions. Payloads cannot specify arbitrary commands or shell text.
 
-- [Project documentation and installation](network_bandwidth_tracker/README.md)
-- [Dependencies](network_bandwidth_tracker/requirements.txt)
-- [Main monitor](network_bandwidth_tracker/monitor.py)
-
-## Open Ports Checker
-
-A read-only CLI that inventories listening TCP sockets and locally bound UDP ports, identifies owning processes where permissions allow, and highlights wildcard-bound sockets.
-
-- [Project documentation and installation](open_ports_checker/README.md)
-- [Dependencies](open_ports_checker/requirements.txt)
-- [Main monitor](open_ports_checker/monitor.py)
-
-## Docker Container Health Checker
-
-A Docker CLI-based monitor that tracks container Healthcheck states and can safely restart running containers reported as unhealthy, with cooldowns, retry limits, dry-run mode, and JSON output.
-
-- [Project documentation and installation](docker_container_health_checker/README.md)
-- [Example configuration](docker_container_health_checker/config.example.json)
-- [Main monitor](docker_container_health_checker/monitor.py)
-## Smart Log Anomaly Grepper
-
-A lightweight, local-first log anomaly detector using token rarity, normalized template novelty, and character entropy for Linux text logs and Windows Event Logs.
-
-- [Documentation and installation](smart_log_anomaly_grepper/README.md)
-- [Example configuration](smart_log_anomaly_grepper/config.example.json)
-- [CLI script](smart_log_anomaly_grepper/grepper.py)
-
-## Zombie Process & Orphaned Port Reaper
-
-Monitor configured processes for high CPU/RAM combined with disk-I/O inactivity; report listener ports and optionally restart allowlisted systemd units.
-
-- [Documentation and usage](zombie_process_orphaned_port_reaper/README.md)
-- [Example configuration](zombie_process_orphaned_port_reaper/config.example.json)
-- [Dependencies](zombie_process_orphaned_port_reaper/requirements.txt)
-- [Main monitor](zombie_process_orphaned_port_reaper/monitor.py)
-
-## Local DNS Sinkhole & Ad/Malware Blocklist Updater
-
-Cross-platform hosts-file updater that aggregates threat-intelligence/ad domain feeds, supports an allowlist, preserves unrelated hosts entries, and creates timestamped backups.
-
-- [Documentation and usage](local_dns_sinkhole_updater/README.md)
-- [Example feeds/config](local_dns_sinkhole_updater/feeds.example.json)
-- [Updater CLI](local_dns_sinkhole_updater/updater.py)\n\n## Database Connection Pool Exhaustion Monitor
-
-A cross-platform monitor for established TCP connections to PostgreSQL, MySQL, and Microsoft SQL Server, with optional server-side connection counts and configured limits.
-
-- [Documentation and installation](database_connection_pool_exhaustion_monitor/README.md)
-- [Example configuration](database_connection_pool_exhaustion_monitor/config.example.json)
-- [Optional dependencies](database_connection_pool_exhaustion_monitor/requirements.txt)
-- [Main monitor](database_connection_pool_exhaustion_monitor/monitor.py)
-
-
-## Dynamic Firewall Blacklist Sync
-
-A log-driven IP blocking tool with threshold/window detection, allowlists, dry-run by default, and Linux nftables/iptables plus Windows Defender Firewall backends.
-
-- [Documentation and usage](dynamic_firewall_blacklist_sync/README.md)
-- [Example configuration](dynamic_firewall_blacklist_sync/config.example.json)
-- [CLI script](dynamic_firewall_blacklist_sync/dynamic_firewall_sync.py)
-- [Parser tests](dynamic_firewall_blacklist_sync/tests/test_parser.py)
-
-## Hardware Inventory & Serial Number Harvester
-
-Cross-platform hardware inventory collector for Linux and Windows, including motherboard serial, BIOS/UEFI details, CPU/RAM, disk metadata, optional SMART health, SQLite history, CSV export, JSON output, and periodic scans.
-
-- [Documentation and installation](hardware_inventory_serial_harvester/README.md)
-- [Dependencies](hardware_inventory_serial_harvester/requirements.txt)
-- [Collector CLI](hardware_inventory_serial_harvester/inventory.py)
-
-
-## Interactive TUI Service Manager
-
-Cross-platform terminal dashboard for listing and controlling Linux systemd and Windows Services, with search, state/startup visibility, confirmation-protected actions, deny-action config, and JSON/CSV export.
-
-- [Documentation, installation, and usage](service_manager_tui/README.md)
-- [Dependencies](service_manager_tui/requirements.txt)
-- [Sample config](service_manager_tui/config.example.json)
-- [TUI and CLI](service_manager_tui/service_manager.py)
-- [Tests](service_manager_tui/tests/test_service_manager.py)
+- [Project documentation and security setup](webhook_to_system_command_bridge/README.md)
+- [Example configuration](webhook_to_system_command_bridge/config.example.json)
+- [Server](webhook_to_system_command_bridge/webhook_bridge.py)
