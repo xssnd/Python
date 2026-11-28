@@ -86,3 +86,11 @@ A minimal internal CI/CD webhook server that verifies HMAC-SHA256 signatures, ti
 - [Project documentation and security setup](webhook_to_system_command_bridge/README.md)
 - [Example configuration](webhook_to_system_command_bridge/config.example.json)
 - [Server](webhook_to_system_command_bridge/webhook_bridge.py)
+
+## SMB/NFS Share Permission Auditor
+
+A read-only mounted-share scanner that flags world-writable permissions, exact 777 modes, sensitive-looking world-readable files, group-writable sensitive files, and visible ACL entries (when `getfacl` is available). Includes text, JSON, and CSV reports.
+
+
+- [Documentation](smb_nfs_share_permission_auditor/README.md)
+- [Auditor script](smb_nfs_share_permission_auditor/auditor.py)
